@@ -7,7 +7,7 @@ It is intended to be used in cross-platform toolkit-less programs (such as
 audio plugins) to provide a file dialog for X11/unix systems, where other
 platforms have a similar dialog from the operating system.
 
-SOFT features:
+SOFD features:
 *   single file selection
 *   keyboard navigation and selection
 *   "Places" list
