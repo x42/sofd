@@ -467,7 +467,10 @@ static int (*_fib_filter_function)(const char *filename);
 #define FAREATEXTL (FAREAMRGL + TEXTSEP) //px; filename text-left FAREAMRGL + TEXTSEP
 #define SORTBTNOFF -10 //px;
 
+#ifndef DBLCLKTME
 #define DBLCLKTME 200 //msec; double click time
+#endif
+
 #define DRAW_OUTLINE
 #define DOUBLE_BUFFER
 
