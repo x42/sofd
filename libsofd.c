@@ -159,7 +159,7 @@ static int cmp_recent (const void *p1, const void *p2) {
 }
 
 int x_fib_add_recent (const char *path, time_t atime) {
-	int i;
+	unsigned int i;
 	struct stat fs;
 	if (_recentlock) { return -1; }
 	if (access (path, R_OK)) {
@@ -185,7 +185,7 @@ int x_fib_add_recent (const char *path, time_t atime) {
 			return _recentcnt;
 		}
 	}
-	_recentlist = realloc (_recentlist, (_recentcnt + 1) * sizeof(FibRecentFile));
+	_recentlist = (FibRecentFile*)realloc (_recentlist, (_recentcnt + 1) * sizeof(FibRecentFile));
 	_recentlist[_recentcnt].atime = atime;
 	strcpy (_recentlist[_recentcnt].path, path);
 	qsort (_recentlist, _recentcnt + 1, sizeof(FibRecentFile), cmp_recent);
@@ -236,7 +236,7 @@ int x_fib_save_recent (const char *fn) {
 	if (_recentlock) { return -1; }
 	if (!fn) { return -1; }
 	if (_recentcnt < 1 || !_recentlist) { return -1; }
-	int i;
+	unsigned int i;
 	char *dn = strdup (fn);
 	mkpath (dirname (dn));
 	free (dn);
@@ -522,7 +522,7 @@ static void fib_expose (Display *dpy, Window realwin) {
 			int ignored_i;
 			unsigned int ignored_u;
 			XGetGeometry(dpy, _pixbuffer, &ignored_w, &ignored_i, &ignored_i, &w, &h, &ignored_u, &ignored_u);
-			if (w != _fib_width || h != _fib_height) {
+			if (_fib_width != (int)w || _fib_height != (int)h) {
 				XFreePixmap (dpy, _pixbuffer);
 				_pixbuffer = None;
 			}
@@ -1199,11 +1199,12 @@ static int fib_dirlistadd (Display *dpy, const int i, const char* path, const ch
 }
 
 static int fib_openrecent (Display *dpy, const char *sel) {
-	int i, j;
+	int i;
+	unsigned int j;
 	assert (_recentcnt > 0);
 	fib_pre_opendir (dpy);
 	query_font_geometry (dpy, _fib_gc, "Last Used", &_fib_font_time_width, NULL, NULL, NULL);
-	_dirlist = calloc (_recentcnt, sizeof(FibFileEntry));
+	_dirlist = (FibFileEntry*) calloc (_recentcnt, sizeof(FibFileEntry));
 	_dircount = _recentcnt;
 	for (j = 0, i = 0; j < _recentcnt; ++j) {
 		char base[1024];
@@ -1259,7 +1260,7 @@ static int fib_opendir (Display *dpy, const char* path, const char *sel) {
 		}
 
 		if (_dircount > 0)
-			_dirlist = calloc (_dircount, sizeof(FibFileEntry));
+			_dirlist = (FibFileEntry*) calloc (_dircount, sizeof(FibFileEntry));
 
 		rewinddir (dir);
 
@@ -1278,7 +1279,7 @@ static int fib_opendir (Display *dpy, const char* path, const char *sel) {
 		++t0;
 	}
 	assert (_pathparts > 0);
-	_pathbtn = calloc (_pathparts + 1, sizeof(FibPathButton));
+	_pathbtn = (FibPathButton*) calloc (_pathparts + 1, sizeof(FibPathButton));
 
 	t1 = _cur_path;
 	i = 0;
@@ -1402,7 +1403,7 @@ static int fib_widget_at_pos (Display *dpy, int x, int y, int *it) {
 
 	// buttons at bottom
 	if (y > btop && y < bbot) {
-		int i;
+		size_t i;
 		*it = -1;
 		for (i = 0; i < sizeof(_btns) / sizeof(FibButton*); ++i) {
 			const int bx = _btns[i]->x0;
@@ -1642,7 +1643,7 @@ static void fib_mouseup (Display *dpy, int x, int y, int btn, unsigned long time
 }
 
 static void add_place_raw (Display *dpy, const char *name, const char *path) {
-	_placelist = realloc (_placelist, (_placecnt + 1) * sizeof(FibPlace));
+	_placelist = (FibPlace*) realloc (_placelist, (_placecnt + 1) * sizeof(FibPlace));
 	strcpy (_placelist[_placecnt].path, path);
 	strcpy (_placelist[_placecnt].name, name);
 	_placelist[_placecnt].flags = 0;
@@ -1753,7 +1754,7 @@ static const char *ignore_devices[] = {
 };
 
 static int check_mount (const char *mountpoint, const char *fs, const char *device) {
-	int i;
+	size_t i;
 	if (!mountpoint || !fs || !device) return -1;
 	//printf("%s %s %s\n", mountpoint, fs, device);
 	for (i = 0 ; i < sizeof(ignore_mountpoints) / sizeof(char*); ++i) {
@@ -1777,7 +1778,7 @@ static int check_mount (const char *mountpoint, const char *fs, const char *devi
 	return 0;
 }
 
-static int read_mtab (Display *dpy, char *mtab) {
+static int read_mtab (Display *dpy, const char *mtab) {
 	FILE *mt = fopen (mtab, "r");
 	if (!mt) return -1;
 	int found = 0;
@@ -1980,7 +1981,7 @@ int x_fib_show (Display *dpy, Window parent, int x, int y) {
 		_btn_filter.flags |= 8;
 	}
 
-	int i;
+	size_t i;
 	int btncnt = 0;
 	_btn_w = 0;
 	_btn_span = 0;
@@ -2202,7 +2203,7 @@ int x_fib_handle_events (Display *dpy, XEvent *event) {
 								int j = (_fsel + i + 1) % _dircount;
 								char kcmp = _dirlist[j].name[0];
 								if (kcmp > 0x40 && kcmp <= 0x5A) kcmp |= 0x20;
-								if (kcmp == key) {
+								if (kcmp == (char)key) {
 									fib_select ( dpy, j);
 									break;
 								}
