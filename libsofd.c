@@ -32,7 +32,7 @@
  */
 
 #ifdef SOFD_TEST
-#define HAVE_LIBX11
+#define HAVE_X11
 #include "libsofd.h"
 #endif
 
