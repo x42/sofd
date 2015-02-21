@@ -1132,7 +1132,7 @@ static inline int fib_filter (const char *name) {
 	if (_fib_filter_function) {
 		return _fib_filter_function (name);
 	} else {
-		return 0;
+		return 1;
 	}
 }
 
