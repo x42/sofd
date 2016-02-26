@@ -398,6 +398,12 @@ static char     _fib_cfg_custom_places[1024] = "";
 static char     _fib_cfg_custom_font[256] = "";
 static char     _fib_cfg_title[128] = "xjadeo - Open Video File";
 
+/* This is the 2nd typedef, the other is in the header file. This solves a
+ * problem with extern "C" includes, but is not an elegant solution. */
+typedef void (*x_file_changed_cb_t)(const char*, void *userdata);
+static x_file_changed_cb_t  _x_file_changed_cb;
+static void                *_x_file_changed_ud;
+
 typedef struct {
 	char name[256];
 	int x0;
@@ -1107,6 +1113,13 @@ static void fib_resort (const char * sel) {
 	}
 }
 
+void x_fib_file_changed_cb(x_file_changed_cb_t cb, void *userdata)
+{
+	_x_file_changed_cb = cb;
+	_x_file_changed_ud = userdata;
+}
+
+
 static void fib_select (Display *dpy, int item) {
 	if (_fsel >= 0) {
 		_dirlist[_fsel].flags &= ~2;
@@ -1123,6 +1136,17 @@ static void fib_select (Display *dpy, int item) {
 		}
 	} else {
 		_fsel = -1;
+	}
+
+	if(_x_file_changed_cb && _fsel >= 0) {
+		int i = 0;
+		char path[1024] = "/";
+		while (++i <= _pathparts) {
+			strcat (path, _pathbtn[i].name);
+			strcat (path, "/");
+		}
+		strcat (path, _dirlist[_fsel].name);
+		_x_file_changed_cb( path, _x_file_changed_ud);
 	}
 
 	fib_expose (dpy, _fib_win);
@@ -2371,6 +2395,11 @@ static int fib_filter_movie_filename (const char *name) {
 	return 0;
 }
 
+void sofd_file_change_cb(const char *file, void *userdata)
+{
+	printf("SOFD file changed callback: %s\n", file);
+}
+
 int main (int argc, char **argv) {
 	Display* dpy = XOpenDisplay (0);
 	if (!dpy) return -1;
@@ -2379,6 +2408,8 @@ int main (int argc, char **argv) {
 	x_fib_configure (1, "Open Movie File");
 	x_fib_load_recent ("/tmp/sofd.recent");
 	x_fib_show (dpy, 0, 300, 300);
+
+	x_fib_file_changed_cb(sofd_file_change_cb, 0);
 
 	while (1) {
 		XEvent event;
